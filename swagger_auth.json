@@ -1,0 +1,28 @@
+    <html>
+
+    <head>
+      <title>Sorry. We couldn't find what you were looking for.</title>
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+      <style>
+        body {
+          margin-top: 100px;
+        }
+
+        h1 {
+          margin-bottom: 20px;
+        }
+
+        .debug {}
+      </style>
+    </head>
+
+    <body>
+      <div class="container">
+        <h1>Sorry. We couldn't find what you were looking for.</h1>
+        <p>Double check your spelling and try again... or if all else fails, you can always contact the site administrator.</p>
+              </div>
+    </body>
+
+    </html>
+    

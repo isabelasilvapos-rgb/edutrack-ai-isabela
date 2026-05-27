@@ -1,0 +1,17 @@
+{
+  "name": "edutrack-api",
+  "version": "1.0.0",
+  "description": "API local para EduTrack AI usando Express e MSSQL",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "jsonwebtoken": "^9.0.0",
+    "mssql": "^12.5.4"
+  }
+}

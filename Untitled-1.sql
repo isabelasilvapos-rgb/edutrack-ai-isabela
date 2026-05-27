@@ -1,0 +1,8 @@
+
+USE EduTrackDB;
+GO
+
+IF OBJECT_ID('Tasks', 'U') IS NOT NULL DROP TABLE Tasks;
+IF OBJECT_ID('Subjects', 'U') IS NOT NULL DROP TABLE Subjects;
+IF OBJECT_ID('Users', 'U') IS NOT NULL DROP TABLE Users;
+GO

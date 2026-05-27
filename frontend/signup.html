@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - EduTrack AI</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .signup-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .signup-card {
+            width: 100%;
+            max-width: 400px;
+        }
+        .signup-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .signup-header h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        .error-msg {
+            color: var(--color-red-500, #ef4444);
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="signup-container">
+        <div class="card signup-card glass">
+            <div class="signup-header">
+                <h1>EduTrack AI</h1>
+                <p>Crie sua conta e comece a gerenciar suas disciplinas.</p>
+            </div>
+            
+            <form id="signupForm">
+                <div class="input-group">
+                    <label for="name">Nome Completo</label>
+                    <input type="text" id="name" class="input-control" placeholder="Ex: Isabela Pereira" required>
+                </div>
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" class="input-control" placeholder="aluno@edutrack.ai" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" class="input-control" placeholder="Crie uma senha forte" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Cadastrar-se</button>
+                <div style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
+                    <span style="color: var(--text-secondary);">Já possui uma conta?</span>
+                    <a href="index.html" style="color: var(--primary); font-weight: 500; margin-left: 0.25rem;">Faça Login</a>
+                </div>
+                <div id="errorMsg" class="error-msg">Erro ao realizar o cadastro. Tente novamente.</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const btn = e.target.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = 'Criando conta...';
+            btn.disabled = true;
+            document.getElementById('errorMsg').style.display = 'none';
+
+            try {
+                // Chama a nova função signup da nossa API real do Xano
+                const response = await window.api.signup(name, email, password);
+                
+                if (response && response.token) {
+                    // Guarda o token e loga automaticamente
+                    localStorage.setItem('user', JSON.stringify(response.user));
+                    localStorage.setItem('token', response.token);
+                    
+                    // Redirecionamento após cadastro com sucesso
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (error) {
+                const errorDiv = document.getElementById('errorMsg');
+                errorDiv.innerText = error.message || 'Erro ao realizar o cadastro.';
+                errorDiv.style.display = 'block';
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

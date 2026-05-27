@@ -1,0 +1,21 @@
+# Tasks: Configuração do Banco de Dados no Xano
+
+- [x] Acessar o painel do Xano e selecionar o workspace do projeto.
+- [x] **Configurar Tabela `users`**
+  - [x] Criar ou modificar a tabela padrão `users`.
+  - [x] Adicionar/Verificar os campos: `name`, `email`, `password`.
+  - [x] Validar se todos os nomes estão em **snake_case**.
+- [x] **Configurar Tabela `subjects`**
+  - [x] Criar a tabela `subjects`.
+  - [x] Adicionar os campos da disciplina (`name`, `professor`, `workload_hours`, `description`, `start_date`, `end_date`, `status`).
+  - [x] Adicionar o relacionamento (Table Reference) com a tabela `users` (`user_id`).
+  - [x] Validar se todos os nomes estão em **snake_case**.
+- [x] **Configurar Tabela `academic_tasks`**
+  - [x] Criar a tabela `academic_tasks`.
+  - [x] Adicionar os campos da tarefa (ex: `title`, `description`, `due_date`, `is_completed`, `score`).
+  - [x] Adicionar o relacionamento (Table Reference) com a tabela `users` (`user_id`).
+  - [x] Adicionar o relacionamento (Table Reference) com a tabela `subjects` (`subject_id`).
+  - [x] Validar se todos os nomes estão em **snake_case**.
+- [x] **Revisão Final**
+  - [x] Confirmar se o relacionamento entre `academic_tasks` e `subjects` permite recuperar a disciplina de uma tarefa facilmente.
+  - [x] Adicionar alguns registros de teste diretamente pelo painel do Xano para validar o CRUD.
