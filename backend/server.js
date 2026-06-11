@@ -92,7 +92,9 @@ async function findUserByEmail(email) {
 }
 
 async function getUserById(id) {
-  const res = await pool.request().input('id', sql.Int, id).query('SELECT TOP 1 id, name, email, created_at FROM Users WHERE id = @id');
+  // Nem todas as instalações possuem a coluna `created_at` na tabela Users.
+  // Selecionamos apenas as colunas garantidas para evitar erros de coluna inválida.
+  const res = await pool.request().input('id', sql.Int, id).query('SELECT TOP 1 id, name, email FROM Users WHERE id = @id');
   return res.recordset[0];
 }
 
@@ -162,8 +164,31 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/disciplinas', authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   try {
-    const result = await pool.request().input('userId', sql.Int, userId).query('SELECT id, name, professor, workload, status FROM Subjects WHERE user_id = @userId');
-    res.json(result.recordset);
+    // Recuperar email do usuário (Users) e localizar o cliente correspondente
+    const userRes = await pool.request().input('id', sql.Int, userId).query('SELECT email FROM Users WHERE id = @id');
+    const userRow = userRes.recordset[0];
+    if (!userRow || !userRow.email) {
+      return res.json([]);
+    }
+
+    const clienteRes = await pool.request().input('email', sql.NVarChar, userRow.email).query('SELECT id_cliente FROM Clientes WHERE email = @email');
+    if (!clienteRes.recordset.length) {
+      // Nenhum cliente vinculado a esse usuário => sem disciplinas
+      return res.json([]);
+    }
+
+    const clienteId = clienteRes.recordset[0].id_cliente;
+    const result = await pool.request()
+      .input('clienteId', sql.Int, clienteId)
+      .query('SELECT id_disciplina, nome, professor, carga_horaria, status FROM Disciplinas WHERE id_cliente = @clienteId');
+
+    res.json(result.recordset.map(r => ({
+      id: r.id_disciplina,
+      name: r.nome,
+      professor: r.professor,
+      workload: r.carga_horaria,
+      status: r.status || 'Ativa'
+    })));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao buscar disciplinas' });
@@ -175,13 +200,34 @@ app.post('/api/disciplinas', authenticateToken, async (req, res) => {
   const { name, professor, workload } = req.body;
   if (!name) return res.status(400).json({ error: 'Nome da disciplina obrigatório' });
   try {
+    // Garantir que exista um registro em Clientes para este usuário (procura por email)
+    const userRes = await pool.request().input('id', sql.Int, userId).query('SELECT id, name, email FROM Users WHERE id = @id');
+    const userRow = userRes.recordset[0];
+    if (!userRow) return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    const clienteRes = await pool.request().input('email', sql.NVarChar, userRow.email).query('SELECT id_cliente FROM Clientes WHERE email = @email');
+    let clienteId;
+    if (clienteRes.recordset.length) {
+      clienteId = clienteRes.recordset[0].id_cliente;
+    } else {
+      // Criar cliente com senha placeholder (hash) para satisfazer NOT NULL
+      const placeholder = await bcrypt.hash(userRow.email + Date.now(), 10);
+      const insCliente = await pool.request()
+        .input('nome', sql.NVarChar, userRow.name)
+        .input('email', sql.NVarChar, userRow.email)
+        .input('senha', sql.NVarChar, placeholder)
+        .query('INSERT INTO Clientes (nome, email, senha) OUTPUT INSERTED.id_cliente VALUES (@nome, @email, @senha)');
+      clienteId = insCliente.recordset[0].id_cliente;
+    }
+
     const insert = await pool.request()
-      .input('userId', sql.Int, userId)
-      .input('name', sql.NVarChar, name)
+      .input('clienteId', sql.Int, clienteId)
+      .input('nome', sql.NVarChar, name)
       .input('professor', sql.NVarChar, professor || '')
-      .input('workload', sql.Int, workload || 0)
-      .query('INSERT INTO Subjects (user_id, name, professor, workload) OUTPUT INSERTED.* VALUES (@userId, @name, @professor, @workload)');
-    res.json(insert.recordset[0]);
+      .input('carga', sql.Int, workload || 0)
+      .query('INSERT INTO Disciplinas (id_cliente, nome, professor, carga_horaria) OUTPUT INSERTED.* VALUES (@clienteId, @nome, @professor, @carga)');
+    const r = insert.recordset[0];
+    res.json({ id: r.id_disciplina, name: r.nome, professor: r.professor, workload: r.carga_horaria, status: r.status });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao criar disciplina' });
@@ -244,6 +290,7 @@ app.put('/api/tarefas/:id', authenticateToken, async (req, res) => {
 // Health
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+// Start server after DB init
 // Start server after DB init
 initDb().then(() => {
   app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
